@@ -453,13 +453,13 @@ Command IDs in the welcome view and menus must match exactly. If the implementat
 **Done when:** all unit tests pass, `src/core` has high coverage, and nothing in `src/core` imports `vscode`.
 
 ### Phase 2 — Git layer and analyzer
-- [ ] `git/exec.ts` (execFile wrapper with timeout, maxBuffer, typed errors)
-- [ ] `git/repo.ts` (repo root cache, shallow check, HEAD sha)
-- [ ] `git/blame.ts` (with `-w` and conditional `--ignore-revs-file`)
-- [ ] `git/files.ts` (`ls-files -z`, `show <sha>:<path>`)
-- [ ] `vscode/analyzer.ts`: document → `DriftItem[]` (comments → scopes → blame → scoring → filter dismissals)
-- [ ] `vscode/log.ts` OutputChannel logger
-- [ ] Temporary dev command that logs analyzer output for the active file (remove in Phase 5)
+- [x] `git/exec.ts` (execFile wrapper with timeout, maxBuffer, typed errors)
+- [x] `git/repo.ts` (repo root cache, shallow check, HEAD sha)
+- [x] `git/blame.ts` (with `-w` and conditional `--ignore-revs-file`)
+- [x] `git/files.ts` (`ls-files -z`, `show <sha>:<path>`)
+- [x] `vscode/analyzer.ts`: document → `DriftItem[]` (comments → scopes → blame → scoring → filter dismissals)
+- [x] `vscode/log.ts` OutputChannel logger
+- [x] Temporary dev command that logs analyzer output for the active file (remove in Phase 5)
 
 **Done when:** running the dev command on the demo repo logs the expected drift items.
 
@@ -528,6 +528,7 @@ The only planned webview: a repo-wide dashboard with charts (drift by folder, mo
 - Blame unsaved buffers with `git blame --contents -` (instead of hiding decorations on dirty documents)
 - Accurate mode using `git log -L` for exact commit counts
 - Heuristic to skip commented-out code
+- Tokenizer-based comment detection, so `//` or `#` lines inside multi-line strings aren't treated as comments
 - CLI / GitHub Action that reports drift in pull requests
 - Per-folder thresholds
 

@@ -8,6 +8,10 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   prettier,
   {
+    files: ['**/*.mjs'],
+    languageOptions: { globals: { process: 'readonly', console: 'readonly', URL: 'readonly' } },
+  },
+  {
     // The core must stay pure so it can be unit-tested without VS Code.
     files: ['src/core/**/*.ts'],
     rules: {

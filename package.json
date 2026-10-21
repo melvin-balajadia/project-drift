@@ -29,6 +29,32 @@
     "onStartupFinished"
   ],
   "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "projectDrift.devAnalyze",
+        "title": "Analyze Active File (dev)",
+        "category": "Project Drift"
+      }
+    ],
+    "configuration": {
+      "title": "Project Drift",
+      "properties": {
+        "projectDrift.threshold": {
+          "type": "integer",
+          "default": 2,
+          "minimum": 1,
+          "description": "Number of newer commits to a comment's code before the comment is flagged."
+        },
+        "projectDrift.maxScopeLines": {
+          "type": "integer",
+          "default": 20,
+          "minimum": 1,
+          "description": "Maximum number of code lines considered to belong to a comment."
+        }
+      }
+    }
+  },
   "scripts": {
     "build": "node esbuild.mjs",
     "watch": "node esbuild.mjs --watch",
