@@ -508,12 +508,12 @@ Command IDs in the welcome view and menus must match exactly. If the implementat
 - Flask had no Python symbol provider installed, so it used the heuristic throughout.
 
 ### Phase 6 — Docs and release
-- [ ] `README.md`: one-line pitch, demo GIF, features, how it works (comment → scope → blame → score), settings, commands, **Limitations** (blame approximation, full-line comments only, supported languages), **Design decisions** (why native UI instead of a webview), contributing
+- [x] `README.md`: one-line pitch, demo GIF (placeholder until recorded), features, how it works (comment → scope → blame → score), settings, commands, **Limitations** (blame approximation, full-line comments only, supported languages), **Design decisions** (why native UI instead of a webview), contributing
 - [ ] Demo GIF recorded from the demo repo
-- [ ] `media/icon.png` (128x128)
-- [ ] `CHANGELOG.md` (1.0.0) and `LICENSE` (MIT)
-- [ ] `vsce package`, install the `.vsix` locally, and smoke-test it in a clean VS Code profile
-- [ ] Confirm the name "Project Drift" is available, then publish to the VS Code Marketplace (`vsce publish`) and Open VSX (`ovsx publish`)
+- [x] `media/icon.png` (128x128)
+- [x] `CHANGELOG.md` (1.0.0) and `LICENSE` (MIT)
+- [x] `vsce package`, install the `.vsix` locally, and smoke-test it in a clean VS Code profile
+- [ ] Confirm the name "Project Drift" is available, then publish to the VS Code Marketplace (`vsce publish`) and Open VSX (`ovsx publish`). Name checked 2026-10-21: no "Project Drift" on either registry; publisher `melvinbalajadia` not created yet on either.
 
 **Done when:** the extension installs from the Marketplace and works on a fresh machine.
 

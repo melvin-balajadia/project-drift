@@ -1,6 +1,8 @@
 **
 !dist/extension.js
-!media/**
+!media/icon.png
+!media/drift.svg
+!media/gutter.svg
 !README.md
 !CHANGELOG.md
 !LICENSE

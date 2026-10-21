@@ -13,5 +13,6 @@ mkdirSync(workspaceFolder, { recursive: true });
 export default defineConfig({
   files: 'out/test/integration/**/*.test.js',
   workspaceFolder,
+  version: process.env.VSCODE_VERSION || 'stable', // CI also tests the engines.vscode minimum
   mocha: { timeout: 20_000 },
 });
