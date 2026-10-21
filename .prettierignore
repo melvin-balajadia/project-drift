@@ -4,3 +4,4 @@ out/
 demo-repo/
 package-lock.json
 PLAN.md
+coverage/

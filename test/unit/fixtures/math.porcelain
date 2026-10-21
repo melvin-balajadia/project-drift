@@ -1,0 +1,62 @@
+841176ae9f5325d2442f3dde8eb10532d8c6d2c3 1 1 2
+author Alice
+author-mail <a@example.com>
+author-time 1704067200
+author-tz +0000
+committer Alice
+committer-mail <a@example.com>
+committer-time 1704067200
+committer-tz +0000
+summary Initial commit
+boundary
+filename math.js
+	// Adds two numbers.
+841176ae9f5325d2442f3dde8eb10532d8c6d2c3 2 2
+	function add(a, b) {
+0000000000000000000000000000000000000000 3 3 1
+author Not Committed Yet
+author-mail <not.committed.yet>
+author-time 1792567437
+author-tz +0800
+committer Not Committed Yet
+committer-mail <not.committed.yet>
+committer-time 1792567437
+committer-tz +0800
+summary Version of math.js from math.js
+previous f1aae032b726cfe9fb25441b325f1ff4e5bbc1b2 math.js
+filename math.js
+	  return a + b + 0;
+841176ae9f5325d2442f3dde8eb10532d8c6d2c3 4 4 3
+	}
+841176ae9f5325d2442f3dde8eb10532d8c6d2c3 5 5
+	
+841176ae9f5325d2442f3dde8eb10532d8c6d2c3 6 6
+	// Greets a user.
+f1aae032b726cfe9fb25441b325f1ff4e5bbc1b2 7 7 1
+author Bob
+author-mail <a@example.com>
+author-time 1709251200
+author-tz +0000
+committer Bob
+committer-mail <a@example.com>
+committer-time 1709251200
+committer-tz +0000
+summary Default greet name
+previous b193b5296af299edf0da05c60c498d8f99c9ab0a math.js
+filename math.js
+	function greet(name = 'world') {
+b193b5296af299edf0da05c60c498d8f99c9ab0a 8 8 1
+author Alice
+author-mail <a@example.com>
+author-time 1706745600
+author-tz +0000
+committer Alice
+committer-mail <a@example.com>
+committer-time 1706745600
+committer-tz +0000
+summary Use template literal
+previous 841176ae9f5325d2442f3dde8eb10532d8c6d2c3 math.js
+filename math.js
+	  return `Hello ${name}`;
+841176ae9f5325d2442f3dde8eb10532d8c6d2c3 9 9 1
+	}

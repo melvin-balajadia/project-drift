@@ -442,13 +442,13 @@ Command IDs in the welcome view and menus must match exactly. If the implementat
 **Done when:** all scripts pass, and pressing F5 launches the Extension Development Host with "Project Drift activated" in the Output channel.
 
 ### Phase 1 — Core engine (pure)
-- [ ] `types.ts`
-- [ ] `blameParser.ts`
-- [ ] `comments.ts`
-- [ ] `scope.ts` (heuristic + `selectSymbolScope`)
-- [ ] `drift.ts` (scoring + severity)
-- [ ] `dismissalKey.ts`
-- [ ] Unit tests and fixtures for all of the above (Section 11)
+- [x] `types.ts`
+- [x] `blameParser.ts`
+- [x] `comments.ts`
+- [x] `scope.ts` (heuristic + `selectSymbolScope`)
+- [x] `drift.ts` (scoring + severity)
+- [x] `dismissalKey.ts`
+- [x] Unit tests and fixtures for all of the above (Section 11)
 
 **Done when:** all unit tests pass, `src/core` has high coverage, and nothing in `src/core` imports `vscode`.
 

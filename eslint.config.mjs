@@ -3,7 +3,7 @@ import tseslint from 'typescript-eslint';
 import prettier from 'eslint-config-prettier';
 
 export default tseslint.config(
-  { ignores: ['dist/', 'out/', '.vscode-test/', 'demo-repo/'] },
+  { ignores: ['dist/', 'out/', 'coverage/', '.vscode-test/', 'demo-repo/'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   prettier,
