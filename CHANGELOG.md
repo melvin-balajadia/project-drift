@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.1
+
+- New icon: the amber gutter marker beside a drifting `//`. The activity bar icon matches it.
+
 ## 1.0.0
 
 First release.
