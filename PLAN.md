@@ -300,7 +300,7 @@ export interface DriftItem {
   - `git ls-files -z` filtered to supported extensions (`.js .jsx .mjs .cjs .ts .tsx .py`), then filtered with `projectDrift.exclude` globs (minimatch) and `projectDrift.maxFileSizeKB`.
   - Concurrency limit of 4 (small in-house limiter, no dependency).
   - `withProgress` notification, **cancellable**.
-  - Scope: open each file with `openTextDocument` and request symbols with a ~1500 ms timeout, falling back to the heuristic.
+  - Scope: open each file with `openTextDocument` and request symbols with a 10 s safety timeout, falling back to the heuristic. (Originally ~1500 ms; changed after profiling in Phase 5, see the profiling results there.)
 - Results populate the tree and the cache.
 
 ### 8.10 Status bar
@@ -504,7 +504,8 @@ Command IDs in the welcome view and menus must match exactly. If the implementat
 | pallets/flask @ `d086db85` (Python) | 5,562 | 83 | 7.7 s (93 ms/file) | 0.9 s | 62 in 17 files |
 
 - On Windows each git process costs ~60 ms to start; a batch looks HEAD up once per repo, so a warm scan spawns almost no git processes.
-- Document symbol requests cost ~13 s of the axios cold scan (22 s with them disabled), and make results vary between runs depending on whether the TypeScript server answers within the 1.5 s timeout. Flask had no Python symbol provider installed, so it used the heuristic throughout.
+- Symbol timeout: with the original 1.5 s timeout, results varied between runs depending on whether the TypeScript server answered in time (axios: 40 vs 48 drifted comments). Raising it to a 10 s safety net gave identical results across runs (39 and 39) at the same speed (32–34 s cold), so that is what ships. Heuristic-only scope was faster (22 s) but misses changes past blank lines in long functions. The cold-scan time in the table above was measured with the 1.5 s timeout.
+- Flask had no Python symbol provider installed, so it used the heuristic throughout.
 
 ### Phase 6 — Docs and release
 - [ ] `README.md`: one-line pitch, demo GIF, features, how it works (comment → scope → blame → score), settings, commands, **Limitations** (blame approximation, full-line comments only, supported languages), **Design decisions** (why native UI instead of a webview), contributing

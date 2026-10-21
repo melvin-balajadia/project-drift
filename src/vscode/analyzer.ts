@@ -9,7 +9,10 @@ import { blameFile } from '../git/blame';
 import { repoRoot } from '../git/repo';
 import { getConfig } from './config';
 
-const SYMBOL_TIMEOUT_MS = 1500;
+// A safety net for a hung language server, not a speed knob: a short timeout made
+// results depend on how fast the server answered (axios: 40 vs 48 drifted comments
+// across runs at 1.5 s), while waiting barely changed scan time (32-34 s vs 35 s).
+const SYMBOL_TIMEOUT_MS = 10_000;
 
 export interface RepoFile {
   root: string;
