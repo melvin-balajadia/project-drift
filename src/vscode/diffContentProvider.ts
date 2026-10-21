@@ -2,7 +2,7 @@ import * as path from 'node:path';
 import * as vscode from 'vscode';
 import type { DriftItem } from '../core/types';
 import { showFile } from '../git/files';
-import { log } from './log';
+import { log, registerCommand } from './log';
 
 export const SHOW_DIFF = 'projectDrift.showDiff';
 const SCHEME = 'project-drift-git';
@@ -17,7 +17,7 @@ export function registerDiff(context: vscode.ExtensionContext): void {
         return showFile(root, sha, uri.path.slice(1));
       },
     }),
-    vscode.commands.registerCommand(SHOW_DIFF, showDiff),
+    registerCommand(SHOW_DIFF, showDiff),
   );
 }
 

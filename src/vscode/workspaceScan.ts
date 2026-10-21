@@ -5,7 +5,8 @@ import * as vscode from 'vscode';
 import { listFiles } from '../git/files';
 import type { DriftCache } from './cache';
 import { getConfig } from './config';
-import { log } from './log';
+import { GitError } from '../git/exec';
+import { log, registerCommand } from './log';
 import { FOCUS_VIEW } from './driftTree';
 
 export const SCAN_WORKSPACE = 'projectDrift.scanWorkspace';
@@ -41,7 +42,8 @@ async function scannableFiles(): Promise<vscode.Uri[]> {
     try {
       files = await listFiles(folder.uri.fsPath); // relative to the folder
     } catch (error) {
-      log.info(`Skipping ${folder.name}: ${String(error)}`); // usually not a git repo
+      if (error instanceof GitError && error.kind === 'not-installed') throw error;
+      log.info(`Skipping ${folder.name}: not in a git repository`);
       continue;
     }
     for (const file of files) {
@@ -63,7 +65,8 @@ async function scannableFiles(): Promise<vscode.Uri[]> {
 export function registerWorkspaceScan(context: vscode.ExtensionContext, cache: DriftCache): void {
   let running = false;
   context.subscriptions.push(
-    vscode.commands.registerCommand(SCAN_WORKSPACE, async () => {
+    registerCommand(SCAN_WORKSPACE, async () => {
+      if (cache.gitMissing) return; // already warned
       if (running) {
         void vscode.window.showInformationMessage('Project Drift: A scan is already running.');
         return;
@@ -84,7 +87,7 @@ export function registerWorkspaceScan(context: vscode.ExtensionContext, cache: D
         );
         await vscode.commands.executeCommand(FOCUS_VIEW);
       } catch (error) {
-        log.error(`Scan failed: ${String(error)}`);
+        cache.reportError(error, 'Scan failed');
       } finally {
         running = false;
       }

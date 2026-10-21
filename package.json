@@ -58,11 +58,6 @@
         "command": "projectDrift.toggleDecorations",
         "title": "Toggle Decorations",
         "category": "Project Drift"
-      },
-      {
-        "command": "projectDrift.devAnalyze",
-        "title": "Analyze Active File (dev)",
-        "category": "Project Drift"
       }
     ],
     "menus": {
@@ -187,7 +182,7 @@
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
     "test:unit": "vitest run --coverage",
-    "test:integration": "npm run build && tsc && vscode-test",
+    "test:integration": "npm run build && node -e \"require('fs').rmSync('out',{recursive:true,force:true})\" && tsc && vscode-test",
     "test": "npm run test:unit && npm run test:integration",
     "package": "vsce package --no-dependencies"
   },

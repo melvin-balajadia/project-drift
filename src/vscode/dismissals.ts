@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import type { DriftItem } from '../core/types';
 import type { DriftCache } from './cache';
+import { registerCommand } from './log';
 
 export const MARK_ACCURATE = 'projectDrift.markAccurate';
 const STATE_KEY = 'projectDrift.dismissals';
@@ -52,7 +53,7 @@ export function registerDismissalCommands(
 ): void {
   context.subscriptions.push(
     // Called with an item from hovers, code actions, and the tree; without one from the palette.
-    vscode.commands.registerCommand(MARK_ACCURATE, async (item?: DriftItem) => {
+    registerCommand(MARK_ACCURATE, async (item?: DriftItem) => {
       const editor = vscode.window.activeTextEditor;
       item ??= editor && cache.itemAt(editor.document.uri, editor.selection.active.line);
       if (!item) {
@@ -64,7 +65,7 @@ export function registerDismissalCommands(
       await dismissals.add(item.id);
     }),
 
-    vscode.commands.registerCommand('projectDrift.clearDismissals', async () => {
+    registerCommand('projectDrift.clearDismissals', async () => {
       if (dismissals.size === 0) {
         void vscode.window.showInformationMessage(
           'Project Drift: There are no dismissals to clear.',

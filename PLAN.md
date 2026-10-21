@@ -488,13 +488,23 @@ Command IDs in the welcome view and menus must match exactly. If the implementat
 **Done when:** scanning the demo repo lists every expected item, actions work from the tree, and cancelling a scan leaves the extension in a consistent state.
 
 ### Phase 5 — Robustness and tests
-- [ ] Handle every case in Section 10
-- [ ] Integration tests (Section 11)
-- [ ] Remove the Phase 2 dev command
-- [ ] Profile a scan on a mid-sized open-source repo and record the results for the README
-- [ ] Review logs: useful, not noisy
+- [x] Handle every case in Section 10
+- [x] Integration tests (Section 11)
+- [x] Remove the Phase 2 dev command
+- [x] Profile a scan on a mid-sized open-source repo and record the results for the README
+- [x] Review logs: useful, not noisy
 
 **Done when:** all tests pass in CI and no edge case in Section 10 produces an error popup or an uncaught exception.
+
+**Profiling results (for the README).** Windows 11, VS Code 1.143, default settings, full clones, 2026-10-21:
+
+| Repo | Commits | Files scanned | Cold scan | Warm scan (no changes) | Drifted comments |
+|---|---|---|---|---|---|
+| axios/axios @ `fceeb109` (JS/TS) | 2,240 | 277 | 35 s (128 ms/file) | 4.3 s | 40–48 in 12–13 files |
+| pallets/flask @ `d086db85` (Python) | 5,562 | 83 | 7.7 s (93 ms/file) | 0.9 s | 62 in 17 files |
+
+- On Windows each git process costs ~60 ms to start; a batch looks HEAD up once per repo, so a warm scan spawns almost no git processes.
+- Document symbol requests cost ~13 s of the axios cold scan (22 s with them disabled), and make results vary between runs depending on whether the TypeScript server answers within the 1.5 s timeout. Flask had no Python symbol provider installed, so it used the heuristic throughout.
 
 ### Phase 6 — Docs and release
 - [ ] `README.md`: one-line pitch, demo GIF, features, how it works (comment → scope → blame → score), settings, commands, **Limitations** (blame approximation, full-line comments only, supported languages), **Design decisions** (why native UI instead of a webview), contributing

@@ -1,8 +1,11 @@
+import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { forEachLimited } from '../core/concurrency';
 import type { DriftItem } from '../core/types';
-import { headSha } from '../git/repo';
+import { GitError } from '../git/exec';
+import { headSha, isShallow } from '../git/repo';
 import { analyzeDocument, resolveFile } from './analyzer';
+import { getConfig } from './config';
 import type { Dismissals } from './dismissals';
 import { watchHead } from './gitExtension';
 import { log } from './log';
@@ -23,6 +26,9 @@ export class DriftCache implements vscode.Disposable {
   private readonly entries = new Map<string, Entry>();
   private readonly generations = new Map<string, number>();
   private readonly dirty = new Set<string>();
+  private readonly shallowChecked = new Set<string>();
+  /** Set when git isn't installed; analysis stays off for the session. */
+  gitMissing = false;
   private readonly changed = new vscode.EventEmitter<void>();
   readonly onDidChange = this.changed.event;
   private readonly subscriptions: vscode.Disposable[];
@@ -64,15 +70,18 @@ export class DriftCache implements vscode.Disposable {
     token?: vscode.CancellationToken,
     onDone?: () => void,
   ): Promise<void> {
+    // HEAD is per repo, and each git process costs ~60 ms on Windows, so the batch
+    // looks it up once per repo. A HEAD change mid-batch triggers another batch.
+    const heads = new Map<string, Promise<string | undefined>>();
     await forEachLimited(
       uris,
       CONCURRENCY,
       async (uri) => {
         try {
-          await this.refresh(await vscode.workspace.openTextDocument(uri));
+          await this.refresh(await vscode.workspace.openTextDocument(uri), heads);
         } catch (error) {
-          // Typically deleted or unreadable; drop stale results.
-          log.warn(`Can't open ${uri.fsPath}: ${String(error)}`);
+          // Typically deleted (e.g. by a checkout); drop stale results.
+          log.debug(`Can't open ${uri.fsPath}: ${String(error)}`);
           if (this.entries.delete(uri.toString())) this.changed.fire();
         }
         onDone?.();
@@ -81,8 +90,15 @@ export class DriftCache implements vscode.Disposable {
     );
   }
 
-  /** Re-analyzes a document unless its repo, HEAD, and mtime are unchanged. Never throws. */
-  async refresh(doc: vscode.TextDocument): Promise<void> {
+  /**
+   * Re-analyzes a document unless its repo, HEAD, and mtime are unchanged. Never throws.
+   * `heads` shares HEAD lookups across a batch; without it HEAD is read fresh.
+   */
+  async refresh(
+    doc: vscode.TextDocument,
+    heads?: Map<string, Promise<string | undefined>>,
+  ): Promise<void> {
+    if (this.gitMissing) return;
     const uri = doc.uri.toString();
     this.trackDirty(doc);
     if (doc.isDirty) return; // analyzed on save
@@ -96,20 +112,58 @@ export class DriftCache implements vscode.Disposable {
         if (isLatest() && this.entries.delete(uri)) this.changed.fire();
         return;
       }
+      let headLookup = heads?.get(file.root);
+      if (!headLookup) {
+        headLookup = headSha(file.root);
+        heads?.set(file.root, headLookup);
+      }
       const [head, stat] = await Promise.all([
-        headSha(file.root),
+        headLookup,
         vscode.workspace.fs.stat(doc.uri),
+        this.noticeShallow(file.root),
       ]);
       const key = [file.root, file.file, head, stat.mtime].join('|');
       if (this.entries.get(uri)?.key === key) return;
 
-      const items = await analyzeDocument(doc, file);
+      const start = Date.now();
+      const tooLarge = stat.size > getConfig(doc.uri).maxFileSizeKB * 1024;
+      const items = tooLarge ? [] : await analyzeDocument(doc, file);
       if (!isLatest()) return; // a newer refresh superseded this one
+      log.debug(
+        tooLarge
+          ? `Skipped ${file.file}: larger than maxFileSizeKB`
+          : `Analyzed ${file.file}: ${items.length} drifted in ${Date.now() - start} ms`,
+      );
       this.entries.set(uri, { key, items });
       this.changed.fire();
     } catch (error) {
-      log.warn(`Analysis failed for ${doc.uri.fsPath}: ${String(error)}`);
+      this.reportError(error, doc.uri.fsPath);
     }
+  }
+
+  /** Logs a failure. A missing git binary is reported once and disables analysis. */
+  reportError(error: unknown, context: string): void {
+    if (error instanceof GitError && error.kind === 'not-installed') {
+      if (this.gitMissing) return;
+      this.gitMissing = true;
+      log.error(`git was not found on PATH; analysis is disabled for this session.`);
+      void vscode.window.showWarningMessage(
+        'Project Drift needs git, which was not found on your PATH. Install git, then reload the window.',
+      );
+      return;
+    }
+    log.warn(`${context}: ${error instanceof Error ? error.message : String(error)}`);
+  }
+
+  /** Shallow clones lack history, so drift is undercounted. Says so once per repo. */
+  private async noticeShallow(root: string): Promise<void> {
+    if (this.shallowChecked.has(root)) return;
+    this.shallowChecked.add(root);
+    if (!(await isShallow(root).catch(() => false))) return;
+    log.info(`${root} is a shallow clone; results may be incomplete.`);
+    void vscode.window.showInformationMessage(
+      `Project Drift: ${path.basename(root)} is a shallow clone, so some drift may be missed. Run "git fetch --unshallow" for complete results.`,
+    );
   }
 
   /** Forces the next refresh of every document to re-analyze; results stay visible meanwhile. */
@@ -169,12 +223,10 @@ export function registerTriggers(context: vscode.ExtensionContext, cache: DriftC
       if (document.uri.scheme === 'file' && !document.isDirty) refreshSoon(document);
     }),
     vscode.workspace.onDidChangeConfiguration((e) => {
-      if (
-        !e.affectsConfiguration('projectDrift.threshold') &&
-        !e.affectsConfiguration('projectDrift.maxScopeLines')
-      ) {
-        return;
-      }
+      const affectsResults = ['threshold', 'maxScopeLines', 'maxFileSizeKB'].some((key) =>
+        e.affectsConfiguration(`projectDrift.${key}`),
+      );
+      if (!affectsResults) return;
       cache.invalidate();
       void cache.refreshMany(cache.documents());
     }),

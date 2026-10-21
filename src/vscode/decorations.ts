@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import type { DriftCache } from './cache';
+import { registerCommand } from './log';
 
 const STATE_KEY = 'projectDrift.decorationsEnabled';
 
@@ -29,7 +30,7 @@ export function registerDecorations(context: vscode.ExtensionContext, cache: Dri
     type,
     cache.onDidChange(update),
     vscode.window.onDidChangeVisibleTextEditors(update),
-    vscode.commands.registerCommand('projectDrift.toggleDecorations', async () => {
+    registerCommand('projectDrift.toggleDecorations', async () => {
       enabled = !enabled;
       update();
       await context.workspaceState.update(STATE_KEY, enabled);
