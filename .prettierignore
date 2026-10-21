@@ -1,0 +1,6 @@
+dist/
+out/
+.vscode-test/
+demo-repo/
+package-lock.json
+PLAN.md
