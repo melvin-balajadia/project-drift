@@ -478,12 +478,12 @@ Command IDs in the welcome view and menus must match exactly. If the implementat
 **Done when:** in the demo repo, drifted comments are marked; the hover lists the correct commits; the diff opens; dismissing hides the warning; a new commit to that code brings it back; switching branches refreshes results.
 
 ### Phase 4 — Sidebar and workspace scan
-- [ ] View container, view, and icon
-- [ ] `driftTree.ts` with file and item nodes, sorting, severity icons, tooltips
-- [ ] Click to reveal; inline and context actions
-- [ ] `workspaceScan.ts`: ls-files, filters, concurrency limit, cancellable progress, symbol timeout fallback
-- [ ] `viewsWelcome` empty states
-- [ ] Tree refreshes on save, dismissal, config change, and HEAD change
+- [x] View container, view, and icon
+- [x] `driftTree.ts` with file and item nodes, sorting, severity icons, tooltips
+- [x] Click to reveal; inline and context actions
+- [x] `workspaceScan.ts`: ls-files, filters, concurrency limit, cancellable progress, symbol timeout fallback
+- [x] `viewsWelcome` empty states
+- [x] Tree refreshes on save, dismissal, config change, and HEAD change
 
 **Done when:** scanning the demo repo lists every expected item, actions work from the tree, and cancelling a scan leaves the extension in a consistent state.
 

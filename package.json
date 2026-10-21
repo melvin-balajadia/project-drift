@@ -32,14 +32,22 @@
   "contributes": {
     "commands": [
       {
+        "command": "projectDrift.scanWorkspace",
+        "title": "Scan Workspace",
+        "category": "Project Drift",
+        "icon": "$(refresh)"
+      },
+      {
         "command": "projectDrift.markAccurate",
         "title": "Mark Comment as Still Accurate",
-        "category": "Project Drift"
+        "category": "Project Drift",
+        "icon": "$(check)"
       },
       {
         "command": "projectDrift.showDiff",
         "title": "Show Changes Since Comment",
-        "category": "Project Drift"
+        "category": "Project Drift",
+        "icon": "$(diff)"
       },
       {
         "command": "projectDrift.clearDismissals",
@@ -63,8 +71,61 @@
           "command": "projectDrift.showDiff",
           "when": "false"
         }
+      ],
+      "view/title": [
+        {
+          "command": "projectDrift.scanWorkspace",
+          "when": "view == projectDrift.driftList",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "projectDrift.markAccurate",
+          "when": "view == projectDrift.driftList && viewItem == driftItem",
+          "group": "inline"
+        },
+        {
+          "command": "projectDrift.markAccurate",
+          "when": "view == projectDrift.driftList && viewItem == driftItem",
+          "group": "drift@1"
+        },
+        {
+          "command": "projectDrift.showDiff",
+          "when": "view == projectDrift.driftList && viewItem == driftItem",
+          "group": "drift@2"
+        }
       ]
     },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "projectDrift",
+          "title": "Project Drift",
+          "icon": "media/drift.svg"
+        }
+      ]
+    },
+    "views": {
+      "projectDrift": [
+        {
+          "id": "projectDrift.driftList",
+          "name": "Drifted Comments"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "projectDrift.driftList",
+        "contents": "No drifted comments found yet.\n[Scan Workspace](command:projectDrift.scanWorkspace)",
+        "when": "projectDrift.hasRepo"
+      },
+      {
+        "view": "projectDrift.driftList",
+        "contents": "Open a git repository to use Project Drift.\n[Open Folder](command:vscode.openFolder)",
+        "when": "!projectDrift.hasRepo"
+      }
+    ],
     "configuration": {
       "title": "Project Drift",
       "properties": {
@@ -84,6 +145,26 @@
           "type": "boolean",
           "default": false,
           "description": "Also report drifted comments in the Problems panel."
+        },
+        "projectDrift.exclude": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "**/node_modules/**",
+            "**/dist/**",
+            "**/build/**",
+            "**/vendor/**",
+            "**/*.min.js"
+          ],
+          "description": "Glob patterns to skip during workspace scans."
+        },
+        "projectDrift.maxFileSizeKB": {
+          "type": "integer",
+          "default": 512,
+          "minimum": 1,
+          "description": "Files larger than this are skipped."
         }
       }
     },
@@ -126,5 +207,8 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.72.0",
     "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "minimatch": "^10.2.6"
   }
 }

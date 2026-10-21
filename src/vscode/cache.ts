@@ -1,10 +1,13 @@
 import * as vscode from 'vscode';
+import { forEachLimited } from '../core/concurrency';
 import type { DriftItem } from '../core/types';
 import { headSha } from '../git/repo';
 import { analyzeDocument, resolveFile } from './analyzer';
 import type { Dismissals } from './dismissals';
 import { watchHead } from './gitExtension';
 import { log } from './log';
+
+const CONCURRENCY = 4;
 
 interface Entry {
   key: string; // repoRoot | path | HEAD | mtime
@@ -48,6 +51,36 @@ export class DriftCache implements vscode.Disposable {
     return [...this.entries.keys()].map((key) => vscode.Uri.parse(key));
   }
 
+  /** Documents with at least one drifted comment, dismissed ones included. */
+  driftedDocuments(): vscode.Uri[] {
+    return [...this.entries]
+      .filter(([, entry]) => entry.items.length > 0)
+      .map(([key]) => vscode.Uri.parse(key));
+  }
+
+  /** Refreshes documents by URI, four at a time. Never throws. */
+  async refreshMany(
+    uris: readonly vscode.Uri[],
+    token?: vscode.CancellationToken,
+    onDone?: () => void,
+  ): Promise<void> {
+    await forEachLimited(
+      uris,
+      CONCURRENCY,
+      async (uri) => {
+        try {
+          await this.refresh(await vscode.workspace.openTextDocument(uri));
+        } catch (error) {
+          // Typically deleted or unreadable; drop stale results.
+          log.warn(`Can't open ${uri.fsPath}: ${String(error)}`);
+          if (this.entries.delete(uri.toString())) this.changed.fire();
+        }
+        onDone?.();
+      },
+      () => token?.isCancellationRequested ?? false,
+    );
+  }
+
   /** Re-analyzes a document unless its repo, HEAD, and mtime are unchanged. Never throws. */
   async refresh(doc: vscode.TextDocument): Promise<void> {
     const uri = doc.uri.toString();
@@ -79,10 +112,9 @@ export class DriftCache implements vscode.Disposable {
     }
   }
 
-  /** Drops all results, e.g. after a settings change. */
-  clear(): void {
-    this.entries.clear();
-    this.changed.fire();
+  /** Forces the next refresh of every document to re-analyze; results stay visible meanwhile. */
+  invalidate(): void {
+    for (const entry of this.entries.values()) entry.key = '';
   }
 
   private trackDirty(doc: vscode.TextDocument): void {
@@ -100,11 +132,18 @@ export class DriftCache implements vscode.Disposable {
 
 const DEBOUNCE_MS = 500;
 
-/** Analyzes visible editors on open, save, settings changes, and HEAD changes. */
+/** Keeps results current: visible editors, saves, reloads, settings, and HEAD changes. */
 export function registerTriggers(context: vscode.ExtensionContext, cache: DriftCache): void {
   const refreshVisible = () => {
     const docs = new Set(vscode.window.visibleTextEditors.map((e) => e.document));
     docs.forEach((doc) => void cache.refresh(doc));
+  };
+  // ponytail: only files that already have drift are re-checked, so a checkout that
+  // introduces drift elsewhere shows up on open or on the next scan. Re-blaming every
+  // scanned file on each commit would cost seconds of git work in a large repo.
+  const onHeadChange = () => {
+    refreshVisible();
+    void cache.refreshMany(cache.driftedDocuments());
   };
 
   const timers = new Map<string, NodeJS.Timeout>();
@@ -130,20 +169,25 @@ export function registerTriggers(context: vscode.ExtensionContext, cache: DriftC
       if (document.uri.scheme === 'file' && !document.isDirty) refreshSoon(document);
     }),
     vscode.workspace.onDidChangeConfiguration((e) => {
-      if (!e.affectsConfiguration('projectDrift')) return;
-      cache.clear();
-      refreshVisible();
+      if (
+        !e.affectsConfiguration('projectDrift.threshold') &&
+        !e.affectsConfiguration('projectDrift.maxScopeLines')
+      ) {
+        return;
+      }
+      cache.invalidate();
+      void cache.refreshMany(cache.documents());
     }),
     { dispose: () => timers.forEach(clearTimeout) },
   );
 
-  void watchHead(context, refreshVisible).then((watching) => {
+  void watchHead(context, onHeadChange).then((watching) => {
     if (watching) return;
     // Without the Git extension, re-check on focus; the cache key includes HEAD.
     log.info('Git extension unavailable; checking for HEAD changes on window focus.');
     context.subscriptions.push(
       vscode.window.onDidChangeWindowState((state) => {
-        if (state.focused) refreshVisible();
+        if (state.focused) onHeadChange();
       }),
     );
   });

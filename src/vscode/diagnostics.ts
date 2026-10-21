@@ -31,6 +31,12 @@ export function registerDiagnostics(context: vscode.ExtensionContext, cache: Dri
     }
   };
 
-  context.subscriptions.push(collection, cache.onDidChange(update));
+  context.subscriptions.push(
+    collection,
+    cache.onDidChange(update),
+    vscode.workspace.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration('projectDrift.showInProblems')) update();
+    }),
+  );
   update();
 }
