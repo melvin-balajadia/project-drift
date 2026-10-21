@@ -464,16 +464,16 @@ Command IDs in the welcome view and menus must match exactly. If the implementat
 **Done when:** running the dev command on the demo repo logs the expected drift items.
 
 ### Phase 3 — Editor experience
-- [ ] Decorations + contributed theme color
-- [ ] Hover with commit list and trusted command links
-- [ ] Code actions
-- [ ] Dismissal store + `markAccurate` + `clearDismissals`
-- [ ] Diff content provider + `showDiff`
-- [ ] Status bar item
-- [ ] `toggleDecorations`
-- [ ] Analysis triggers, debouncing, dirty-document handling, cache
-- [ ] HEAD change detection via the Git extension API, with fallback
-- [ ] Optional diagnostics (`showInProblems`)
+- [x] Decorations + contributed theme color
+- [x] Hover with commit list and trusted command links
+- [x] Code actions
+- [x] Dismissal store + `markAccurate` + `clearDismissals`
+- [x] Diff content provider + `showDiff`
+- [x] Status bar item
+- [x] `toggleDecorations`
+- [x] Analysis triggers, debouncing, dirty-document handling, cache
+- [x] HEAD change detection via the Git extension API, with fallback
+- [x] Optional diagnostics (`showInProblems`)
 
 **Done when:** in the demo repo, drifted comments are marked; the hover lists the correct commits; the diff opens; dismissing hides the warning; a new commit to that code brings it back; switching branches refreshes results.
 

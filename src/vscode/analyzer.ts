@@ -11,20 +11,30 @@ import { getConfig } from './config';
 
 const SYMBOL_TIMEOUT_MS = 1500;
 
-/** Finds drifted comments in a saved document. Throws on git errors; callers log them. */
+export interface RepoFile {
+  root: string;
+  file: string; // repo-relative, forward slashes
+}
+
+/** The repo file behind a document, or undefined if it isn't a supported file in a git repo. */
+export async function resolveFile(doc: vscode.TextDocument): Promise<RepoFile | undefined> {
+  if (doc.uri.scheme !== 'file' || !SUPPORTED_LANGUAGES.includes(doc.languageId)) return undefined;
+  const root = await repoRoot(path.dirname(doc.uri.fsPath));
+  if (!root) return undefined;
+  return { root, file: path.relative(root, doc.uri.fsPath).split(path.sep).join('/') };
+}
+
+/**
+ * Finds drifted comments in a saved document, including dismissed ones (callers
+ * filter those). Throws on git errors; callers log them.
+ */
 export async function analyzeDocument(
   doc: vscode.TextDocument,
-  isDismissed: (id: string) => boolean = () => false,
+  { root, file }: RepoFile,
 ): Promise<DriftItem[]> {
-  if (doc.uri.scheme !== 'file' || !SUPPORTED_LANGUAGES.includes(doc.languageId)) return [];
-
   const text = doc.getText();
   const comments = detectComments(text, doc.languageId);
   if (comments.length === 0) return [];
-
-  const root = await repoRoot(path.dirname(doc.uri.fsPath));
-  if (!root) return [];
-  const file = path.relative(root, doc.uri.fsPath).split(path.sep).join('/');
 
   const [blame, symbols] = await Promise.all([blameFile(root, file), documentSymbols(doc)]);
   const lines = text.split(/\r?\n/);
@@ -39,7 +49,6 @@ export async function analyzeDocument(
     const drift = scoreDrift(blame, comment, scope, threshold);
     if (!drift) continue;
     const id = dismissalKey(file, comment.text, drift.newerCommits[0]!.sha);
-    if (isDismissed(id)) continue;
     items.push({ id, file, repoRoot: root, comment, scope, ...drift });
   }
   return items;

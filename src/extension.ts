@@ -1,13 +1,37 @@
 import * as vscode from 'vscode';
-import { analyzeDocument } from './vscode/analyzer';
+import { analyzeDocument, resolveFile } from './vscode/analyzer';
+import { DriftCache, registerTriggers } from './vscode/cache';
+import { registerCodeActions } from './vscode/codeActions';
+import { registerDecorations } from './vscode/decorations';
+import { registerDiagnostics } from './vscode/diagnostics';
+import { registerDiff } from './vscode/diffContentProvider';
+import { Dismissals, registerDismissalCommands } from './vscode/dismissals';
+import { registerHover } from './vscode/hover';
 import { log } from './vscode/log';
+import { registerStatusBar } from './vscode/statusBar';
 
-export function activate(context: vscode.ExtensionContext): void {
+/** Returns the cache so integration tests can inspect results. */
+export function activate(context: vscode.ExtensionContext): DriftCache {
+  const dismissals = new Dismissals(context.workspaceState);
+  const cache = new DriftCache(dismissals);
   context.subscriptions.push(
     log,
+    dismissals,
+    cache,
     vscode.commands.registerCommand('projectDrift.devAnalyze', devAnalyze),
   );
+
+  registerDecorations(context, cache);
+  registerHover(context, cache);
+  registerCodeActions(context, cache);
+  registerDiff(context);
+  registerDismissalCommands(context, cache, dismissals);
+  registerStatusBar(context, cache);
+  registerDiagnostics(context, cache);
+  registerTriggers(context, cache);
+
   log.info('Project Drift activated');
+  return cache;
 }
 
 export function deactivate(): void {}
@@ -20,7 +44,8 @@ async function devAnalyze(): Promise<void> {
     return;
   }
   try {
-    const items = await analyzeDocument(doc);
+    const file = await resolveFile(doc);
+    const items = file ? await analyzeDocument(doc, file) : [];
     log.info(`${vscode.workspace.asRelativePath(doc.uri)}: ${items.length} drifted comment(s)`);
     for (const item of items) {
       const { comment, scope } = item;

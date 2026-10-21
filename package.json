@@ -32,11 +32,39 @@
   "contributes": {
     "commands": [
       {
+        "command": "projectDrift.markAccurate",
+        "title": "Mark Comment as Still Accurate",
+        "category": "Project Drift"
+      },
+      {
+        "command": "projectDrift.showDiff",
+        "title": "Show Changes Since Comment",
+        "category": "Project Drift"
+      },
+      {
+        "command": "projectDrift.clearDismissals",
+        "title": "Clear All Dismissals",
+        "category": "Project Drift"
+      },
+      {
+        "command": "projectDrift.toggleDecorations",
+        "title": "Toggle Decorations",
+        "category": "Project Drift"
+      },
+      {
         "command": "projectDrift.devAnalyze",
         "title": "Analyze Active File (dev)",
         "category": "Project Drift"
       }
     ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "projectDrift.showDiff",
+          "when": "false"
+        }
+      ]
+    },
     "configuration": {
       "title": "Project Drift",
       "properties": {
@@ -51,9 +79,24 @@
           "default": 20,
           "minimum": 1,
           "description": "Maximum number of code lines considered to belong to a comment."
+        },
+        "projectDrift.showInProblems": {
+          "type": "boolean",
+          "default": false,
+          "description": "Also report drifted comments in the Problems panel."
         }
       }
-    }
+    },
+    "colors": [
+      {
+        "id": "projectDrift.driftBackground",
+        "description": "Background of drifted comment lines.",
+        "defaults": {
+          "dark": "#ffb80014",
+          "light": "#ffb80022"
+        }
+      }
+    ]
   },
   "scripts": {
     "build": "node esbuild.mjs",
