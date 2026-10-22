@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.2
+
+- Improved Marketplace overview: getting started steps, screenshots of each feature, a demo video link, and a dark page banner.
+
 ## 1.0.1
 
 - New icon: the amber gutter marker beside a drifting `//`. The activity bar icon matches it.

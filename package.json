@@ -2,9 +2,13 @@
   "name": "project-drift",
   "displayName": "Project Drift",
   "description": "Find comments your code has outgrown. Flags code comments that have fallen out of sync with the code they describe, using git history.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "publisher": "melvinbalajadia",
   "icon": "media/icon.png",
+  "galleryBanner": {
+    "color": "#0e1015",
+    "theme": "dark"
+  },
   "license": "MIT",
   "repository": {
     "type": "git",
